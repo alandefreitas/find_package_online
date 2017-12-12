@@ -10,20 +10,25 @@ include(FindPackageOnline)
 Whenever you need a package, you can just do:
 
 ```
-# ...
 find_package_online(Gtest)
 find_package_online(Boost)
 find_package_online(SQLITE3)
-# and so on
 ```
+
+and so on...
 
 The command `find_package_online` will look for the package just like `find_package` would. However, if the proper `find_package` module is not available, it will download it to your modules folder and use it instead. 
 
 If there is a valid `find_package` module but the library is not found, it will download a script to add a `ExternalProject` to your project.
 
+- [Writing your own modules](#writing-your-own-modules)
+    - [Find module](#find-module)
+    - [External Project module](#external-project-module)
+- [Issues](#issues)
+
 ## Writing your own modules
 
-If neither `find_package` nor `find_package_online` have a proper Find module, you might need to write a new `FindPackage.cmake` file. Writing new modules is very simple. You can use one of the files in the folder [`Modules`](./Modules/) as reference.
+**You probably won't need to write your own modules** (that's the whole point), but if neither `find_package` nor `find_package_online` have a proper `find` module, you might need to write a new `FindPackage.cmake` file. Writing new modules is very simple. You can use one of the files in the folder [`Modules`](./Modules/) as reference.
 
 * **If you need to write a new module, please consider sharing so we can keep this community growing and someone else doesn't have to go thought that again.** 
 
