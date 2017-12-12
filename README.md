@@ -82,7 +82,7 @@ set(MYLIBRARY_INCLUDE_DIRS ${MYLIBRARY_INCLUDE_DIR} )
 
 If the script that find the package is found but the package itself is not found, write a `ExternalProjectMyLibrary.cmake` script that adds the library with the `ExternalProject_Add` command. 
 
-In most cases, it only takes one command. There are many [simple examples](../blob/master/LICENSE) on CMake's website.
+In most cases, it only takes one command. There are many [simple examples](https://cmake.org/cmake/help/git-stage/module/ExternalProject.html#examples) on CMake's website.
 
 * **If you need to write a new External Project script, please consider sharing so we can keep this community growing and someone else doesn't have to go thought that again.** 
 
