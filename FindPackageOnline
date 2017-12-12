@@ -1,0 +1,175 @@
+function (find_package_online package_name)
+    #######################################################
+    ###              Set up the mode                    ###
+    #######################################################
+    set(mode)
+    if(${ARGC} GREATER 1)
+        set(mode ${ARGV1})
+    endif()
+
+    #######################################################
+    ###      Try to find the package as usual           ###
+    #######################################################
+    set(${package_name}_FOUND FALSE)
+    find_find_package(${package_name})
+    if (${package_name}_FIND_PACKAGE_FOUND)
+        message(STATUS "Let's try to find_package(${package_name}) then.")
+        find_package(${package_name} ${mode})
+        if (${package_name}_FOUND)
+            message(STATUS "find_package(${package_name}) found the package")
+            set(${package_name}_FOUND TRUE)
+        else ()
+            message(STATUS "find_package(${package_name}) NOT FOUND")
+            set(${package_name}_FOUND 0)
+        endif()
+    else()
+        message(STATUS "find_package(${package_name}) cannot be used")
+    endif()
+
+    #######################################################
+    ###        Find it externally if not found          ###
+    #######################################################
+    if (NOT ${package_name}_FIND_PACKAGE_FOUND)
+        message(STATUS "Let's try find_package(${package_name}) online")
+        #######################################################
+        ###         Download the find_package file          ###
+        #######################################################
+        if (NOT ${package_name}_FIND_PACKAGE_FOUND)
+            set(url https://raw.githubusercontent.com/alandefreitas/find_package_online/master/Modules/Find${package_name}.cmake.in)
+            message(STATUS "Trying to download the find_package_online(${package_name}) function")
+            best_modules_path(${package_name})
+            set(destination_file ${destination_folder}/Find${package_name}.cmake)
+            file(DOWNLOAD ${url} ${destination_file} STATUS download_check)
+            list(GET download_check 0 download_failed)
+            if(download_failed)
+                file(REMOVE ${destination_file})
+                message(STATUS "#######################################################################################################################")
+                message(STATUS "We failed to find or even download the file implementing the find_package(${package_name}) function you need.")
+                message(STATUS "Consider implementing a ${destination_file}.")
+                message(STATUS "It's not that hard. Sorry, but no one has done that before.")
+                message(STATUS "#######################################################################################################################")
+            else ()
+                message(STATUS "We found the find_package(${package_name}) function you need and saved it in ${destination_file}.")
+                set(${package_name}_FIND_PACKAGE_FOUND 1)
+                #######################################################
+                ###         Try to find the package again           ###
+                #######################################################
+                if (${package_name}_FIND_PACKAGE_FOUND)
+                    message(STATUS "Let's see if we can find_package(${package_name}) now.")
+                    find_package(${package_name} ${mode})
+                endif()
+                ################################################################
+                ###         If we STILL don't find the package               ###
+                ### Set up the package from a external source if we have to  ###
+                ################################################################
+                if (NOT ${package_name}_PACKAGE_FOUND)
+                    set(destination_file ${destination_folder}/ExternalProject${package_name}.cmake)
+                    if (EXISTS destination_file)
+                        message(STATUS "We found an External Project script in ${destination_file}")
+                    else ()
+                        set(url https://raw.githubusercontent.com/mfreiholz/cmake-example-external-project/master/CMakeLists-ExternalProjects.txt)
+                        # set(url https://raw.githubusercontent.com/Kitware/CMake/master/Tests/FindPackageModeMakefileTest/ExternalProject${package_name}.cmake.in)
+                        message(STATUS "Trying to download the External Project script")
+                        file(DOWNLOAD ${url} ${destination_file} STATUS download_check)
+                        list(GET download_check 0 download_failed)
+                        if(download_failed)
+                            file(REMOVE ${destination_file})
+                            message(STATUS "#######################################################################################################################")
+                            message(STATUS "We failed to find an external script with the defining an external project ${package_name}.")
+                            message(STATUS "Consider implementing a ${destination_file}.")
+                            message(STATUS "It's not that hard. Sorry, but no one has done that before.")
+                            message(STATUS "#######################################################################################################################")
+                        else ()
+                            message(STATUS "We found the external project ${package_name} script you need and saved it in ${destination_file}.")
+                            set(${package_name}_FIND_PACKAGE_FOUND 1)
+                        endif()
+                    endif()
+                    include(${destination_file})
+                    ################################################################
+                    ###      Trying to find the package for the last time        ###
+                    ################################################################
+                    message(STATUS "Trying to find the package for the last time.")
+                    find_package(${package_name} ${mode})
+                endif()
+            endif()
+        endif()
+    endif()
+
+    #######################################################
+    ###        Set results on the parent scope          ###
+    #######################################################
+    if (${package_name}_FOUND)
+        if (NOT ${mode} STREQUAL "QUIET")
+            message(STATUS "${package_name} FOUND")
+        endif()
+        set(${package_name}_FOUND        ${${package_name}_FOUND}        PARENT_SCOPE)
+        set(${package_name}_INCLUDE_DIRS ${${package_name}_INCLUDE_DIRS} PARENT_SCOPE)
+        set(${package_name}_LIBRARIES    ${${package_name}_LIBRARIES}    PARENT_SCOPE)
+    else()
+        if (NOT ${mode} STREQUAL "QUIET")
+            message(STATUS "${package_name} NOT FOUND")
+        endif()
+    endif()
+
+
+    #######################################################
+    ###        Emit error if still not found            ###
+    #######################################################
+    if (NOT ${package_name}_FOUND)
+        if (NOT ${mode} STREQUAL "QUIET")
+            message(SEND_ERROR  "You need to install ${package_name} to run this project")
+            set(error_msg_mode SEND_ERROR)
+            if (${mode} STREQUAL "REQUIRED")
+                set(error_msg_mode FATAL_ERROR)
+            endif()
+            if (${APPLE})
+                message(${error_msg_mode} "Install http://brewformulas.org/ and then run something like `brew install ${package_name}`")
+            endif()
+            if (${UNIX})
+                message(${error_msg_mode} "Install `apt-get` and then run something like `sudo apt-get install ${package_name}`")
+            endif()
+            if (${WIN32})
+                message(${error_msg_mode} "You need to install the package ${package_name}`")
+            endif()
+        endif()
+    endif()
+
+    message("")
+
+endfunction()
+
+function(find_find_package package_name)
+    set(${package_name}_FIND_PACKAGE_FOUND FALSE PARENT_SCOPE)
+    set(${package_name}_FIND_PACKAGE_FOUND FALSE)
+    foreach (CURRENT_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_ROOT}/Modules)
+        set(filename ${CURRENT_MODULE_PATH}/Find${package_name}.cmake)
+        if(EXISTS ${filename})
+            set(${package_name}_FIND_PACKAGE_FOUND TRUE PARENT_SCOPE)
+            set(${package_name}_FIND_PACKAGE_FOUND TRUE)
+            set(${package_name}_FIND_PACKAGE_FILE ${filename} PARENT_SCOPE)
+            message(STATUS "${filename} found")
+        endif()
+    endforeach ()
+    if(NOT ${package_name}_FIND_PACKAGE_FOUND)
+        message(STATUS "Find${package_name}.cmake not found anywhere")
+    endif()
+endfunction()
+
+function(best_modules_path package_name)
+    set(ideal_path ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/)
+    set(defined_path "")
+    foreach (CURRENT_PATH ${CMAKE_MODULE_PATH})
+        if (NOT defined_path)
+            set(defined_path ${CURRENT_PATH})
+        else()
+            if (defined_path STREQUALS ideal_path)
+                set(defined_path ${CURRENT_PATH})
+            endif()
+        endif()
+    endforeach()
+    if (NOT defined_path)
+        set(defined_path ${ideal_path})
+        set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${defined_path}")
+    endif()
+    set(destination_folder ${defined_path} PARENT_SCOPE)
+endfunction()
