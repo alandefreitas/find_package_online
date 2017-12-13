@@ -3,7 +3,7 @@
 This is the simplest CMake package manager ever, so you don't ever have  problems again when sharing your projects with your team. You can integrate the package manager by inserting the following code anywhere on your script:
 
 ```cmake
-file(DOWNLOAD https://raw.githubusercontent.com/alandefreitas/find_package_online/master/FindPackageOnline ./FindPackageOnline)
+file(DOWNLOAD https://raw.githubusercontent.com/alandefreitas/find_package_online/master/FindPackageOnline ${CMAKE_CURRENT_SOURCE_DIR}/FindPackageOnline)
 include(FindPackageOnline)
 ```
 
