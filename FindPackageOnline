@@ -15,6 +15,11 @@ function (find_package_online package_name)
         set(REQUIRED_MODE FALSE)
     else()
         set(REQUIRED_MODE TRUE)
+        list(REMOVE_ITEM ARGUMENTS REQUIRED)
+    endif()
+    list(FIND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules MODULE_FOLDER_IS_THERE)
+    if (${MODULE_FOLDER_IS_THERE} STREQUAL -1)
+        list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
     endif()
 
     #######################################################
@@ -23,85 +28,250 @@ function (find_package_online package_name)
     set(${package_name}_FOUND FALSE)
     find_find_package(${package_name})
     if (${package_name}_FIND_PACKAGE_FOUND)
-        message(STATUS "Let's try to find_package(${package_name}) then.")
         find_package(${package_name} ${ARGUMENTS})
         if (${package_name}_FOUND)
-            message(STATUS "find_package(${package_name}) found the package")
+            if (NOT QUIET_MODE)
+                message(STATUS "find_package(${package_name}) found the package")
+            endif()
             set(${package_name}_FOUND TRUE)
         else ()
-            message(STATUS "find_package(${package_name}) NOT FOUND")
+            if (NOT QUIET_MODE)
+                message(STATUS "find_package(${package_name}) could not find ${package_name}")
+            endif()
             set(${package_name}_FOUND 0)
         endif()
     else()
-        message(STATUS "find_package(${package_name}) cannot be used")
+        if (NOT QUIET_MODE)
+            message(STATUS "find_package(${package_name}) cannot be used")
+        endif()
     endif()
 
     #######################################################
     ###        Find it externally if not found          ###
     #######################################################
     if (NOT ${package_name}_FIND_PACKAGE_FOUND)
-        message(STATUS "Let's try find_package(${package_name}) online")
+        if (NOT QUIET_MODE)
+            message(STATUS "Let's try find_package(${package_name}) online then")
+        endif()
         #######################################################
         ###         Download the find_package file          ###
         #######################################################
-        if (NOT ${package_name}_FIND_PACKAGE_FOUND)
-            set(url https://raw.githubusercontent.com/alandefreitas/find_package_online/master/Modules/Find${package_name}.cmake)
+        set(url https://raw.githubusercontent.com/alandefreitas/find_package_online/master/Modules/Find${package_name}.cmake)
+        if (NOT QUIET_MODE)
             message(STATUS "Trying to download the find_package_online(${package_name}) function")
-            best_modules_path(${package_name})
-            set(destination_file ${destination_folder}/Find${package_name}.cmake)
-            file(DOWNLOAD ${url} ${destination_file} STATUS download_check)
-            list(GET download_check 0 download_failed)
-            if(download_failed)
-                file(REMOVE ${destination_file})
+        endif()
+        best_modules_path(${package_name})
+        set(destination_file ${destination_folder}/Find${package_name}.cmake)
+        set(temp_destination_file ${destination_folder}/Find${package_name}.cmake)
+        file(DOWNLOAD ${url} ${temp_destination_file} STATUS download_check)
+        list(GET download_check 0 download_failed)
+        if(download_failed)
+            file(REMOVE ${temp_destination_file})
+            if (NOT QUIET_MODE)
                 message(STATUS "#######################################################################################################################")
                 message(STATUS "We failed to find or even download the file implementing the find_package(${package_name}) function you need.")
                 message(STATUS "Consider implementing a ${destination_file}.")
                 message(STATUS "It's not that hard. Sorry, but no one has done that before. Have a look on:")
                 message(STATUS "https://github.com/alandefreitas/find_package_online#writing-your-own-modules")
                 message(STATUS "#######################################################################################################################")
-            else ()
+            endif()
+        else ()
+            file(REMOVE ${temp_destination_file} ${destination_file})
+            if (NOT QUIET_MODE)
                 message(STATUS "We found the find_package(${package_name}) function you need and saved it in ${destination_file}.")
+            endif()
+            set(${package_name}_FIND_PACKAGE_FOUND 1)
+        endif()
+        #######################################################
+        ###         Try to find the package again           ###
+        #######################################################
+        if (${package_name}_FIND_PACKAGE_FOUND)
+            if (NOT QUIET_MODE)
+                message(STATUS "Let's see if we can find_package(${package_name}) now.")
+            endif()
+            find_package(${package_name} ${ARGUMENTS})
+        endif()
+    endif()
+
+    ################################################################
+    ###         If we STILL don't find the package               ###
+    ### Set up the package from a external source if we have to  ###
+    ################################################################
+    if (NOT ${package_name}_FOUND)
+        if (NOT destination_folder)
+            best_modules_path(${package_name})
+        endif()
+        set(destination_file ${destination_folder}/ExternalProject${package_name}.cmake)
+        if (EXISTS ${destination_file})
+            if (NOT QUIET_MODE)
+                message(STATUS "ExternalProject${package_name}.cmake found")
+            endif()
+            include(${destination_file})
+        else ()
+            if (NOT QUIET_MODE)
+                message(STATUS "We did not find an External Project script in ${destination_file}")
+            endif()
+            set(temp_destination_file ${destination_folder}/temp_ExternalProject${package_name}.cmake)
+            set(url https://raw.githubusercontent.com/alandefreitas/find_project_online/master/Modules/ExternalProject${package_name}.cmake)
+            if (NOT QUIET_MODE)
+                message(STATUS "Trying to download the External Project script")
+            endif()
+            file(DOWNLOAD ${url} ${temp_destination_file} STATUS download_check)
+            list(GET download_check 0 download_failed)
+            if(download_failed)
+                file(REMOVE ${temp_##############################################
+                     ###               HEADER                   ###
+                     ##############################################
+                     cmake_minimum_required(VERSION 3.6)
+                     project(PopSolver)
+                     #set(CMAKE_BUILD_TYPE Release)
+                     #set(CMAKE_BUILD_TYPE Debug)
+                     include(cmake_flags.cmake)
+
+                     ##############################################
+                     ###      COMPILE EXTERNAL COMPONENTS       ###
+                     ##############################################
+                     if (EXISTS ${FindPackageOnline})
+                     file(DOWNLOAD https://raw.githubusercontent.com/alandefreitas/find_package_online/master/FindPackageOnline ${CMAKE_CURRENT_SOURCE_DIR}/FindPackageOnline)
+                     endif()
+                     include(FindPackageOnline)
+
+
+                     find_package_online(Boost COMPONENTS system thread chrono timer REQUIRED)
+                     include_directories(${Boost_INCLUDE_DIR})
+                     #set(ALL_LIBRARIES ${Boost_LIBRARIES})
+
+                     find_package_online(OpenCL REQUIRED)
+                     #include_directories(SYSTEM ${OpenCL_INCLUDE_DIRS})
+                     include_directories(${OpenCL_INCLUDE_DIRS})
+                     #set(ALL_LIBRARIES ${ALL_LIBRARIES} ${OpenCL_LIBRARIES})
+
+                     find_package_online(GoogleBenchmark REQUIRED)
+                     include_directories(${GoogleBenchmark_INCLUDE_DIRS})
+                     #set(ALL_LIBRARIES ${ALL_LIBRARIES} ${GoogleBenchmark_LIBRARIES})
+
+                     find_package_online(PEGTL REQUIRED)
+                     include_directories(${PEGTL_INCLUDE_DIRS})
+                     #set(ALL_LIBRARIES ${ALL_LIBRARIES} ${PEGTL_LIBRARIES})
+
+                     find_package_online(Cling REQUIRED)
+                     include_directories(${Cling_INCLUDE_DIRS})
+                     #set(ALL_LIBRARIES ${ALL_LIBRARIES} ${Cling_LIBRARIES})
+
+                     # Compile examples of utilities we need
+                     set(UTILS_INCLUDE_TESTS OFF)
+                     add_subdirectory(include/utils)
+
+                     ##############################################
+                     ### INCLUDE HEADERS NEEDED BY THE BINARIES ###
+                     ##############################################
+                     include_directories(${CMAKE_SOURCE_DIR}/components)
+                     include_directories(${CMAKE_SOURCE_DIR}/include)
+                     include_directories(${CMAKE_SOURCE_DIR}/include/EA)
+                     include_directories(${CMAKE_SOURCE_DIR}/include/parser)
+                     include_directories(${CMAKE_SOURCE_DIR}/include/sym++)
+                     include_directories(${CMAKE_SOURCE_DIR}/include/utils/include)
+
+                     ##############################################
+                     ###      FIRST BINARIES: LIBRARIES         ###
+                     ##############################################
+
+                     file(GLOB EA_SRCS ${CMAKE_SOURCE_DIR}/lib/solvers/EA/*.cpp)
+                     set(SOLVER_SRCS ${CMAKE_SOURCE_DIR}/lib/Solver.cpp ${EA_SRCS})
+                     add_library(libsolver ${SOLVER_SRCS})
+
+                     ## COPY SYM++
+                     file(COPY ${CMAKE_SOURCE_DIR}/include/sym++/ DESTINATION ${CMAKE_BINARY_DIR}/tools/EA/sym++)
+
+                     ##############################################
+                     ###      SECOND BINARIES: EXECUTABLES      ###
+                     ##############################################
+                     add_subdirectory(tools)
+                     ##############################################
+                     ###               HEADER                   ###
+                     ##############################################
+                     cmake_minimum_required(VERSION 3.6)
+                     project(PopSolver)
+                     #set(CMAKE_BUILD_TYPE Release)
+                     #set(CMAKE_BUILD_TYPE Debug)
+                     include(cmake_flags.cmake)
+
+                     ##############################################
+                     ###      COMPILE EXTERNAL COMPONENTS       ###
+                     ##############################################
+                     if (EXISTS ${FindPackageOnline})
+                     file(DOWNLOAD https://raw.githubusercontent.com/alandefreitas/find_package_online/master/FindPackageOnline ${CMAKE_CURRENT_SOURCE_DIR}/FindPackageOnline)
+                     endif()
+                     include(FindPackageOnline)
+
+
+                     find_package_online(Boost COMPONENTS system thread chrono timer REQUIRED)
+                     include_directories(${Boost_INCLUDE_DIR})
+                     #set(ALL_LIBRARIES ${Boost_LIBRARIES})
+
+                     find_package_online(OpenCL REQUIRED)
+                     #include_directories(SYSTEM ${OpenCL_INCLUDE_DIRS})
+                     include_directories(${OpenCL_INCLUDE_DIRS})
+                     #set(ALL_LIBRARIES ${ALL_LIBRARIES} ${OpenCL_LIBRARIES})
+
+                     find_package_online(GoogleBenchmark REQUIRED)
+                     include_directories(${GoogleBenchmark_INCLUDE_DIRS})
+                     #set(ALL_LIBRARIES ${ALL_LIBRARIES} ${GoogleBenchmark_LIBRARIES})
+
+                     find_package_online(PEGTL REQUIRED)
+                     include_directories(${PEGTL_INCLUDE_DIRS})
+                     #set(ALL_LIBRARIES ${ALL_LIBRARIES} ${PEGTL_LIBRARIES})
+
+                     find_package_online(Cling REQUIRED)
+                     include_directories(${Cling_INCLUDE_DIRS})
+                     #set(ALL_LIBRARIES ${ALL_LIBRARIES} ${Cling_LIBRARIES})
+
+                     # Compile examples of utilities we need
+                     set(UTILS_INCLUDE_TESTS OFF)
+                     add_subdirectory(include/utils)
+
+                     ##############################################
+                     ### INCLUDE HEADERS NEEDED BY THE BINARIES ###
+                     ##############################################
+                     include_directories(${CMAKE_SOURCE_DIR}/components)
+                     include_directories(${CMAKE_SOURCE_DIR}/include)
+                     include_directories(${CMAKE_SOURCE_DIR}/include/EA)
+                     include_directories(${CMAKE_SOURCE_DIR}/include/parser)
+                     include_directories(${CMAKE_SOURCE_DIR}/include/sym++)
+                     include_directories(${CMAKE_SOURCE_DIR}/include/utils/include)
+
+                     ##############################################
+                     ###      FIRST BINARIES: LIBRARIES         ###
+                     ##############################################
+
+                     file(GLOB EA_SRCS ${CMAKE_SOURCE_DIR}/lib/solvers/EA/*.cpp)
+                     set(SOLVER_SRCS ${CMAKE_SOURCE_DIR}/lib/Solver.cpp ${EA_SRCS})
+                     add_library(libsolver ${SOLVER_SRCS})
+
+                     ## COPY SYM++
+                     file(COPY ${CMAKE_SOURCE_DIR}/include/sym++/ DESTINATION ${CMAKE_BINARY_DIR}/tools/EA/sym++)
+
+                     ##############################################
+                     ###      SECOND BINARIES: EXECUTABLES      ###
+                     ##############################################
+                     add_subdirectory(tools)
+                     destination_file})
+                if (NOT QUIET_MODE)
+                    message(STATUS "#######################################################################################################################")
+                    message(STATUS "We failed to find an external script with the defining an external project ${package_name}.")
+                    message(STATUS "Consider implementing a ${destination_file}.")
+                    message(STATUS "It's not that hard. Sorry, but no one has done that before. Have a look on:")
+                    message(STATUS "https://github.com/alandefreitas/find_package_online#writing-your-own-modules")
+                    message(STATUS
+                            "#######################################################################################################################")
+                endif()
+            else ()
+                file(RENAME ${temp_destination_file} ${destination_file})
+                if (NOT QUIET_MODE)
+                    message(STATUS "We found the external project ${package_name} script you need and saved it in ${destination_file}.")
+                endif()
+                include(${destination_file})
                 set(${package_name}_FIND_PACKAGE_FOUND 1)
-                #######################################################
-                ###         Try to find the package again           ###
-                #######################################################
-                if (${package_name}_FIND_PACKAGE_FOUND)
-                    message(STATUS "Let's see if we can find_package(${package_name}) now.")
-                    find_package(${package_name} ${ARGUMENTS})
-                endif()
-                ################################################################
-                ###         If we STILL don't find the package               ###
-                ### Set up the package from a external source if we have to  ###
-                ################################################################
-                if (NOT ${package_name}_PACKAGE_FOUND)
-                    set(destination_file ${destination_folder}/ExternalProject${package_name}.cmake)
-                    if (EXISTS destination_file)
-                        message(STATUS "We found an External Project script in ${destination_file}")
-                    else ()
-                        set(url https://raw.githubusercontent.com/alandefreitas/find_project_online/master/Modules/ExternalProject${package_name}.cmake)
-                        message(STATUS "Trying to download the External Project script")
-                        file(DOWNLOAD ${url} ${destination_file} STATUS download_check)
-                        list(GET download_check 0 download_failed)
-                        if(download_failed)
-                            file(REMOVE ${destination_file})
-                            message(STATUS "#######################################################################################################################")
-                            message(STATUS "We failed to find an external script with the defining an external project ${package_name}.")
-                            message(STATUS "Consider implementing a ${destination_file}.")
-                            message(STATUS "It's not that hard. Sorry, but no one has done that before. Have a look on:")
-                            message(STATUS "https://github.com/alandefreitas/find_package_online#writing-your-own-modules")
-                            message(STATUS "#######################################################################################################################")
-                        else ()
-                            message(STATUS "We found the external project ${package_name} script you need and saved it in ${destination_file}.")
-                            set(${package_name}_FIND_PACKAGE_FOUND 1)
-                        endif()
-                    endif()
-                    include(${destination_file})
-                    ################################################################
-                    ###      Trying to find the package for the last time        ###
-                    ################################################################
-                    message(STATUS "Trying to find the package for the last time.")
-                    find_package(${package_name} ${ARGUMENTS})
-                endif()
             endif()
         endif()
     endif()
@@ -110,43 +280,45 @@ function (find_package_online package_name)
     ###        Set results on the parent scope          ###
     #######################################################
     if (${package_name}_FOUND)
-        if (NOT ${QUIET_MODE})
-            message(STATUS "${package_name} FOUND")
-        endif()
         set(${package_name}_FOUND        ${${package_name}_FOUND}        PARENT_SCOPE)
         set(${package_name}_INCLUDE_DIRS ${${package_name}_INCLUDE_DIRS} PARENT_SCOPE)
         set(${package_name}_LIBRARIES    ${${package_name}_LIBRARIES}    PARENT_SCOPE)
     else()
         if (NOT ${QUIET_MODE})
-            message(STATUS "${package_name} NOT FOUND")
+            if (NOT QUIET_MODE)
+                message(STATUS "${package_name} NOT FOUND")
+            endif()
         endif()
     endif()
-
 
     #######################################################
     ###        Emit error if still not found            ###
     #######################################################
     if (NOT ${package_name}_FOUND)
         if (NOT ${QUIET_MODE})
-            message(SEND_ERROR  "You need to install ${package_name} to run this project")
-            set(error_msg_mode SEND_ERROR)
+            set(error_msg_mode STATUS)
             if (${REQUIRED_MODE})
                 set(error_msg_mode FATAL_ERROR)
             endif()
-            if (${APPLE})
-                message(${error_msg_mode} "Install http://brewformulas.org/ and then run something like `brew install ${package_name}`")
-            endif()
             if (${UNIX})
-                message(${error_msg_mode} "Install `apt-get` and then run something like `sudo apt-get install ${package_name}`")
+                if (${APPLE})
+                    if (NOT QUIET_MODE)
+                        message(${error_msg_mode} "You need to install ${package_name} to run this project.\nInstall http://brewformulas.org/ and then run something like:\n`brew install ${package_name}`")
+                    endif()
+                else()
+                    if (NOT QUIET_MODE)
+                        message(${error_msg_mode} "You need to install ${package_name} to run this project.\nInstall `apt-get` and then run something like:\n `sudo apt-get install ${package_name}`")
+                    endif()
+                endif()
             endif()
             if (${WIN32})
-                message(${error_msg_mode} "You need to install the package ${package_name}`")
+                if (NOT QUIET_MODE)
+                    message(${error_msg_mode} "You need to install the package ${package_name}`")
+                endif()
             endif()
         endif()
     endif()
-
     message("")
-
 endfunction()
 
 function(find_find_package package_name)
@@ -158,11 +330,15 @@ function(find_find_package package_name)
             set(${package_name}_FIND_PACKAGE_FOUND TRUE PARENT_SCOPE)
             set(${package_name}_FIND_PACKAGE_FOUND TRUE)
             set(${package_name}_FIND_PACKAGE_FILE ${filename} PARENT_SCOPE)
-            message(STATUS "${filename} found")
+            if (NOT QUIET_MODE)
+                message(STATUS "Find${package_name}.cmake found.")
+            endif()
         endif()
     endforeach ()
     if(NOT ${package_name}_FIND_PACKAGE_FOUND)
-        message(STATUS "Find${package_name}.cmake not found anywhere")
+        if (NOT QUIET_MODE)
+            message(STATUS "Find${package_name}.cmake not found anywhere")
+        endif()
     endif()
 endfunction()
 

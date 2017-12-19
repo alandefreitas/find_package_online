@@ -7,11 +7,21 @@ file(DOWNLOAD https://raw.githubusercontent.com/alandefreitas/find_package_onlin
 include(FindPackageOnline)
 ```
 
+If you want to make it faster:
+
+```cmake
+if (EXISTS ${FindPackageOnline})
+    file(DOWNLOAD https://raw.githubusercontent.com/alandefreitas/find_package_online/master/FindPackageOnline ${CMAKE_CURRENT_SOURCE_DIR}/FindPackageOnline)
+endif()
+include(FindPackageOnline)
+```
+
 Whenever you need a package, you can just do:
 
 ```
-find_package_online(Gtest)
+find_package_online(GoogleBenchmark)
 find_package_online(Boost)
+find_package_online(PEGTL)
 find_package_online(SQLITE3)
 ```
 
@@ -21,20 +31,64 @@ The command `find_package_online` will look for the package just like `find_pack
 
 If there is a valid `find_package` module but the library is not found, it will download a script to add a `ExternalProject` to your project.
 
+- [Examples](#examples)
 - [Writing your own modules](#writing-your-own-modules)
     - [Find module](#find-module)
     - [External Project module](#external-project-module)
 - [Issues](#issues)
 
+## Examples
+
+Using [Google Benchmark](https://github.com/google/benchmark) on a project:
+
+```cmake
+cmake_minimum_required(VERSION 2.8.4)
+project(myproject)
+
+if (EXISTS ${FindPackageOnline})
+    file(DOWNLOAD https://raw.githubusercontent.com/alandefreitas/find_package_online/master/FindPackageOnline ${CMAKE_CURRENT_SOURCE_DIR}/FindPackageOnline)
+endif()
+include(FindPackageOnline)
+
+find_package_online(GoogleBenchmark)
+include_directories(${GoogleBenchmark_INCLUDE_DIRS})
+
+add_executable(benchmark_executable benchmark.cpp)
+target_link_libraries(benchmark_executable ${GoogleBenchmark_LIBRARIES})
+```
+
+Using [PEGTL](https://github.com/taocpp/PEGTL) on a project:
+
+```cmake
+cmake_minimum_required(VERSION 2.8.4)
+project(myproject)
+
+if (EXISTS ${FindPackageOnline})
+    file(DOWNLOAD https://raw.githubusercontent.com/alandefreitas/find_package_online/master/FindPackageOnline ${CMAKE_CURRENT_SOURCE_DIR}/FindPackageOnline)
+endif()
+include(FindPackageOnline)
+
+find_package_online(PEGTL)
+include_directories(${PEGTL_INCLUDE_DIRS})
+
+add_executable(pegtl_executable pegtl.cpp)
+target_link_libraries(pegtl_executable ${PEGTL_LIBRARIES})
+```
+
 ## Writing your own modules
 
 **You probably won't need to write your own modules** (that's the whole point), but if neither `find_package` nor `find_package_online` have a proper `find` module, you might need to write a new `FindPackage.cmake` file. Writing new modules is very simple. You can use one of the files in the folder [`Modules`](./Modules/) as reference.
 
-* **If you need to write a new module, please consider sharing so we can keep this community growing and someone else doesn't have to go thought that again.** 
+* **If you do need to write a new module, please consider sharing so other people can find packages online so they have to go thought that again.** 
 
 ### Find module 
 
-Writing a `FindPackage.cmake` module takes a few lines of code:
+Writing a `FindPackage.cmake` module takes a few lines of code. You can use other modules as reference:
+
+* Example 1: Finding a header only library ([`FindPEGTL.cmake`](./Modules/FindPEGTL.cmake`))
+* Example 2: Finding a library ([`FindGoogleBenchmark.cmake`](./Modules/FindGoogleBenchmark.cmake`))
+
+Anyway, there are only a few steps involved in finding a library:
 
 * A `find_path` command that finds where the header files are:
 
@@ -81,15 +135,21 @@ set(MYLIBRARY_LIBRARIES ${MYLIBRARY_LIBRARY} )
 set(MYLIBRARY_INCLUDE_DIRS ${MYLIBRARY_INCLUDE_DIR} )
 ```
 
-* **If you need to write a new Find module, please consider sharing so we can keep this community growing and someone else doesn't have to go thought that again.** 
+* **If you do need to write a new module, please consider sharing so other people can find packages online so they have to go thought that again.** 
 
 ### External Project module
 
 If the script that find the package is found but the package itself is not found, write a `ExternalProjectMyLibrary.cmake` script that adds the library with the `ExternalProject_Add` command. 
 
-In most cases, it only takes one command. There are many [simple examples](https://cmake.org/cmake/help/git-stage/module/ExternalProject.html#examples) on CMake's website.
+When writing a `ExternalProjectMyLibrary.cmake` module, you can use other modules as reference:
 
-* **If you need to write a new External Project script, please consider sharing so we can keep this community growing and someone else doesn't have to go thought that again.** 
+* Example 1: External CMake header only library on github ([`ExternalProjectPEGTL.cmake`](./Modules/ExternalProjectPEGTL.cmake`))
+* Example 2: External CMake library on github  ([`ExternalProjectGoogleBenchmark.cmake`](./Modules/ExternalProjectGoogleBenchmark.cmake`))
+* Example 2: External library on the web ([`ExternalProjectBoost.cmake`](./Modules/ExternalProjectBoost.cmake`))
+
+There are only a few steps involved in finding a library. In most cases, it only takes one command. There are many [simple examples](https://cmake.org/cmake/help/git-stage/module/ExternalProject.html#examples) on CMake's website.
+
+* **If you do need to write a new module, please consider sharing so other people can find packages online so they have to go thought that again.** 
 
 ## Issues
 If you have issues, you can:

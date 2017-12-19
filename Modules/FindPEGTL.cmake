@@ -3,9 +3,9 @@
 # ${package_name}_LIBRARIES	- List of libraries.
 # ${package_name}_FOUND	- True if found.
 
-set(package_name TinyXML)
-set(header_names tinyxml.h)
-set(library_names tinyxml)
+set(package_name PEGTL)
+set(header_names tao/pegtl.hpp tao/pegtl tao/pegtl/config.hpp)
+set(library_names)
 
 # Usual messages
 set(${package_name}_INCLUDE_PATH_DESCRIPTION "top-level directory containing the ${package_name} include directories. E.g /usr/local/include/${package_name} or C:/Program Files/${package_name}/include")
@@ -62,8 +62,6 @@ find_path(${package_name}_INCLUDE_DIR
           PATH_SUFFIXES include # additional subdirectories to check below each directory location
           DOC "The ${${package_name}_LIBRARY_DIR_MESSAGE}" # the documentation string
           )
-
-message("${package_name}_INCLUDE_DIR = ${${package_name}_INCLUDE_DIR}")
 
 #######################################################
 ###               LOOK FOR LIBRARY                  ###

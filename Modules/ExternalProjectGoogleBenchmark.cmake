@@ -1,12 +1,12 @@
 include(ExternalProject)
 
-
 #######################################################
 ### SET UP PACKAGE DATA                             ###
 #######################################################
 
-set(package_name Gtest)
-set(library_files "${PROJECT_BINARY_DIR}/3rdparty/${package_name}/lib/gtest.a")
+set(package_name GoogleBenchmark)
+set(repository "https://github.com/google/benchmark.git")
+set(library_files "${PROJECT_BINARY_DIR}/3rdparty/${package_name}/lib/libbenchmark.a")
 set(include_directories "${CMAKE_BINARY_DIR}/3rdparty/${package_name}/include")
 
 #######################################################
@@ -14,13 +14,12 @@ set(include_directories "${CMAKE_BINARY_DIR}/3rdparty/${package_name}/include")
 #######################################################
 
 ExternalProject_Add(
-        Gtest
-        URL http://googletest.googlecode.com/files/gtest-1.6.0.zip
-        INSTALL_COMMAND ""
-        LOG_DOWNLOAD ON
-        LOG_CONFIGURE ON
-        LOG_BUILD ON
+        ${package_name}
+        GIT_REPOSITORY ${repository}
+        GIT_TAG "master"
+        SOURCE_DIR "${CMAKE_BINARY_DIR}/3rdparty/${package_name}"
         PREFIX "${CMAKE_BINARY_DIR}/3rdparty/prefix/${package_name}"
+        CMAKE_ARGS -DBENCHMARK_DOWNLOAD_DEPENDENCIES=ON -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/3rdparty/${package_name}
 )
 
 #######################################################

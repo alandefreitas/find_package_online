@@ -3,9 +3,9 @@
 # ${package_name}_LIBRARIES	- List of libraries.
 # ${package_name}_FOUND	- True if found.
 
-set(package_name TinyXML)
-set(header_names tinyxml.h)
-set(library_names tinyxml)
+set(package_name Cling)
+set(header_names cling/Interpreter/Interpreter.h)
+set(library_names libcling)
 
 # Usual messages
 set(${package_name}_INCLUDE_PATH_DESCRIPTION "top-level directory containing the ${package_name} include directories. E.g /usr/local/include/${package_name} or C:/Program Files/${package_name}/include")
@@ -56,33 +56,55 @@ endif()
 ###               LOOK FOR HEADER FILE              ###
 #######################################################
 
+if (${package_name}_INCLUDE_DIR)
+    if (NOT EXISTS ${${package_name}_INCLUDE_DIR})
+        unset(${package_name}_INCLUDE_DIR CACHE)
+    endif()
+endif()
+
 find_path(${package_name}_INCLUDE_DIR
           NAMES ${header_names} # possible names for the file in a directory
           PATHS  ${HEADER_SEARCH_PATHS} # Directories to search in addition to the default locations
-          PATH_SUFFIXES include # additional subdirectories to check below each directory location
+          PATH_SUFFIXES ${package_name} # additional subdirectories to check below each directory location
           DOC "The ${${package_name}_LIBRARY_DIR_MESSAGE}" # the documentation string
           )
-
-message("${package_name}_INCLUDE_DIR = ${${package_name}_INCLUDE_DIR}")
 
 #######################################################
 ###               LOOK FOR LIBRARY                  ###
 #######################################################
 if (library_names)
-    find_library( ${package_name}_LIBRARY
-                  NAMES ${library_names} # possible names for the file in a directory
+    find_library( ${package_name}_LIBRARY_libcling
+                  NAMES libcling.dylib # possible names for the file in a directory
                   PATHS ${LIBRARY_SEARCH_PATHS} # Directories to search in addition to the default locations
                   PATH_SUFFIXES lib # additional subdirectories to check below each directory location
                   )
-else()
-    set(${package_name}_LIBRARY "")
+    find_library( ${package_name}_LIBRARY_libclingInterpreter
+                  NAMES libclingInterpreter.a # possible names for the file in a directory
+                  PATHS ${LIBRARY_SEARCH_PATHS} # Directories to search in addition to the default locations
+                  PATH_SUFFIXES lib # additional subdirectories to check below each directory location
+                  )
+    find_library( ${package_name}_LIBRARY_libclingMetaProcessor
+                  NAMES libclingMetaProcessor.a # possible names for the file in a directory
+                  PATHS ${LIBRARY_SEARCH_PATHS} # Directories to search in addition to the default locations
+                  PATH_SUFFIXES lib # additional subdirectories to check below each directory location
+                  )
+    find_library( ${package_name}_LIBRARY_libclingUtils
+                  NAMES libclingUtils.a # possible names for the file in a directory
+                  PATHS ${LIBRARY_SEARCH_PATHS} # Directories to search in addition to the default locations
+                  PATH_SUFFIXES lib # additional subdirectories to check below each directory location
+                  )
 endif()
 
 #######################################################
 ###                 SETUP VARIABLES                 ###
 #######################################################
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(${package_name} DEFAULT_MSG ${package_name}_INCLUDE_DIR)
-mark_as_advanced(${package_name}_INCLUDE_DIR)
-set(${package_name}_LIBRARIES ${${package_name}_LIBRARY} )
+find_package_handle_standard_args(${package_name} DEFAULT_MSG
+                                  ${package_name}_LIBRARY_libcling
+                                  ${package_name}_LIBRARY_libclingInterpreter
+                                  ${package_name}_LIBRARY_libclingMetaProcessor
+                                  ${package_name}_LIBRARY_libclingUtils
+                                  ${package_name}_INCLUDE_DIR)
+mark_as_advanced(${package_name}_INCLUDE_DIR ${package_name}_LIBRARY )
+set(${package_name}_LIBRARIES ${${package_name}_LIBRARY} ${other_library_names})
 set(${package_name}_INCLUDE_DIRS ${${package_name}_INCLUDE_DIR} )

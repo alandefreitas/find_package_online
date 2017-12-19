@@ -1,5 +1,14 @@
 include(ExternalProject)
 
+#######################################################
+### SET UP PACKAGE DATA                             ###
+#######################################################
+
+set(package_name Boost)
+# TODO: List Boost library files here according to the COMPONENTS option
+#set(library_files "${PROJECT_BINARY_DIR}/3rdparty/${package_name}/lib/libbenchmark.a")
+set(include_directories "${CMAKE_BINARY_DIR}/3rdparty/${package_name}/include")
+
 if( ${WIN32} )
     set( Boost_url https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.zip )
     set( Boost_SHA256_Hash 9807a5d16566c57fd74fb522764e0b134a8bbe6b6e8967b83afefd30dcd3be81 )
@@ -11,6 +20,10 @@ else()
     set( Boost_Bootstrap_Command ./bootstrap.sh )
     set( Boost_b2_Command ./b2 )
 endif()
+
+#######################################################
+### ADD IT AS AN EXTERNAL PROJECT                   ###
+#######################################################
 
 ExternalProject_Add(boost
                     # Directory Options
@@ -45,3 +58,19 @@ else()
     set(Boost_LIBRARY_DIR ${CMAKE_BINARY_DIR}/third_party/Boost/INSTALL/lib/ )
     set(Boost_INCLUDE_DIR ${CMAKE_BINARY_DIR}/third_party/Boost/INSTALL/include/boost-1_49/ )
 endif()
+
+#######################################################
+### CREATE AN INTERFACE LIBRARY                     ###
+#######################################################
+
+# Create an interface library
+add_library(${package_name}-interface INTERFACE)
+add_dependencies(${package_name}-interface ${package_name})
+
+# List of libraries, including the interface library we just created
+set(${package_name}_LIBRARIES ${package_name}-interface ${library_files})
+
+# Include directories
+set(${package_name}_INCLUDE_DIRS ${include_directories})
+
+set(${package_name}_FOUND TRUE)
