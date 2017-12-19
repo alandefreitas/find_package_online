@@ -7,6 +7,7 @@ set(package_name Catch)
 set(header_names catch.hpp)
 set(library_names)
 
+
 # Usual messages
 set(${package_name}_INCLUDE_PATH_DESCRIPTION "top-level directory containing the ${package_name} include directories. E.g /usr/local/include/${package_name} or C:/Program Files/${package_name}/include")
 set(${package_name}_INCLUDE_DIR_MESSAGE      "Set the ${package_name}_INCLUDE_DIR cmake cache entry to the ${${package_name}_INCLUDE_PATH_DESCRIPTION}")
