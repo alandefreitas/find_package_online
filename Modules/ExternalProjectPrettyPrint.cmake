@@ -21,6 +21,7 @@ ExternalProject_Add(
         PREFIX "${CMAKE_BINARY_DIR}/3rdparty/prefix/${package_name}"
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
+        INSTALL_COMMAND ""
 )
 
 #######################################################
