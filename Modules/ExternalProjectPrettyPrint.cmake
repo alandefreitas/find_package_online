@@ -8,6 +8,7 @@ set(package_name PrettyPrint)
 set(repository "https://github.com/louisdx/cxx-prettyprint.git")
 set(include_directories "${CMAKE_BINARY_DIR}/3rdparty/${package_name}")
 
+
 #######################################################
 ### ADD IT AS AN EXTERNAL PROJECT                   ###
 #######################################################
