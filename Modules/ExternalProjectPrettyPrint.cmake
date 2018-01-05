@@ -1,226 +1,39 @@
-function (find_package_online package_name)
-    #######################################################
-    ###              Set up the mode                    ###
-    #######################################################
-    set(ARGUMENTS ${ARGV})
-    list(REMOVE_AT ARGUMENTS 0)
-    list(FIND ARGUMENTS QUIET QUIET_MODE)
-    if (${QUIET_MODE} STREQUAL -1)
-        set(QUIET_MODE FALSE)
-    else()
-        set(QUIET_MODE TRUE)
-    endif()
-    list(FIND ARGUMENTS REQUIRED REQUIRED_MODE)
-    if (${REQUIRED_MODE} STREQUAL -1)
-        set(REQUIRED_MODE FALSE)
-    else()
-        set(REQUIRED_MODE TRUE)
-        list(REMOVE_ITEM ARGUMENTS REQUIRED)
-    endif()
-    list(FIND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules MODULE_FOLDER_IS_THERE)
-    if (${MODULE_FOLDER_IS_THERE} STREQUAL -1)
-        list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
-    endif()
+include(ExternalProject)
 
-    #######################################################
-    ###      Try to find the package as usual           ###
-    #######################################################
-    set(${package_name}_FOUND FALSE)
-    find_find_package(${package_name})
-    if (${package_name}_FIND_PACKAGE_FOUND)
-        find_package(${package_name} ${ARGUMENTS})
-        if (${package_name}_FOUND)
-            if (NOT QUIET_MODE)
-                message(STATUS "find_package(${package_name}) found the package")
-            endif()
-            set(${package_name}_FOUND TRUE)
-        else ()
-            if (NOT QUIET_MODE)
-                message(STATUS "find_package(${package_name}) could not find ${package_name}")
-            endif()
-            set(${package_name}_FOUND 0)
-        endif()
-    else()
-        if (NOT QUIET_MODE)
-            message(STATUS "find_package(${package_name}) cannot be used")
-        endif()
-    endif()
+#######################################################
+### SET UP PACKAGE DATA                             ###
+#######################################################
 
-    #######################################################
-    ###        Find it externally if not found          ###
-    #######################################################
-    if (NOT ${package_name}_FIND_PACKAGE_FOUND)
-        if (NOT QUIET_MODE)
-            message(STATUS "Let's try find_package(${package_name}) online then")
-        endif()
-        #######################################################
-        ###         Download the find_package file          ###
-        #######################################################
-        set(url https://raw.githubusercontent.com/alandefreitas/find_package_online/master/Modules/Find${package_name}.cmake)
-        if (NOT QUIET_MODE)
-            message(STATUS "Trying to download the find_package_online(${package_name}) function")
-        endif()
-        best_modules_path(${package_name})
-        set(destination_file ${destination_folder}/Find${package_name}.cmake)
-        set(temp_destination_file ${destination_folder}/Find${package_name}.cmake)
-        file(DOWNLOAD ${url} ${temp_destination_file} STATUS download_check)
-        list(GET download_check 0 download_failed)
-        if(download_failed)
-            file(REMOVE ${temp_destination_file})
-            if (NOT QUIET_MODE)
-                message(STATUS "#######################################################################################################################")
-                message(STATUS "We failed to find or even download the file implementing the find_package(${package_name}) function you need.")
-                message(STATUS "Consider implementing a ${destination_file}.")
-                message(STATUS "It's not that hard. Sorry, but no one has done that before. Have a look on:")
-                message(STATUS "https://github.com/alandefreitas/find_package_online#writing-your-own-modules")
-                message(STATUS "#######################################################################################################################")
-            endif()
-        else ()
-            file(REMOVE ${temp_destination_file} ${destination_file})
-            if (NOT QUIET_MODE)
-                message(STATUS "We found the find_package(${package_name}) function you need and saved it in ${destination_file}.")
-            endif()
-            set(${package_name}_FIND_PACKAGE_FOUND 1)
-        endif()
-        #######################################################
-        ###         Try to find the package again           ###
-        #######################################################
-        if (${package_name}_FIND_PACKAGE_FOUND)
-            if (NOT QUIET_MODE)
-                message(STATUS "Let's see if we can find_package(${package_name}) now.")
-            endif()
-            find_package(${package_name} ${ARGUMENTS})
-        endif()
-    endif()
+set(package_name PrettyPrint)
+set(repository "https://github.com/louisdx/cxx-prettyprint.git")
+set(include_directories "${CMAKE_BINARY_DIR}/3rdparty/${package_name}")
 
-    ################################################################
-    ###         If we STILL don't find the package               ###
-    ### Set up the package from a external source if we have to  ###
-    ################################################################
-    if (NOT ${package_name}_FOUND)
-        if (NOT destination_folder)
-            best_modules_path(${package_name})
-        endif()
-        set(destination_file ${destination_folder}/ExternalProject${package_name}.cmake)
-        if (EXISTS ${destination_file})
-            if (NOT QUIET_MODE)
-                message(STATUS "ExternalProject${package_name}.cmake found")
-            endif()
-            include(${destination_file})
-        else ()
-            if (NOT QUIET_MODE)
-                message(STATUS "We did not find an External Project script in ${destination_file}")
-            endif()
-            set(temp_destination_file ${destination_folder}/temp_ExternalProject${package_name}.cmake)
-            set(url https://raw.githubusercontent.com/alandefreitas/find_project_online/master/Modules/ExternalProject${package_name}.cmake)
-            if (NOT QUIET_MODE)
-                message(STATUS "Trying to download the External Project script")
-            endif()
-            file(DOWNLOAD ${url} ${temp_destination_file} STATUS download_check)
-            list(GET download_check 0 download_failed)
-            if(download_failed)
-                file(REMOVE ${temp_destination_file})
-                if (NOT QUIET_MODE)
-                    message(STATUS "#######################################################################################################################")
-                    message(STATUS "We failed to find an external script with the defining an external project ${package_name}.")
-                    message(STATUS "Consider implementing a ${destination_file}.")
-                    message(STATUS "It's not that hard. Sorry, but no one has done that before. Have a look on:")
-                    message(STATUS "https://github.com/alandefreitas/find_package_online#writing-your-own-modules")
-                    message(STATUS
-                            "#######################################################################################################################")
-                endif()
-            else ()
-                file(RENAME ${temp_destination_file} ${destination_file})
-                if (NOT QUIET_MODE)
-                    message(STATUS "We found the external project ${package_name} script you need and saved it in ${destination_file}.")
-                endif()
-                include(${destination_file})
-                set(${package_name}_FIND_PACKAGE_FOUND 1)
-            endif()
-        endif()
-    endif()
+#######################################################
+### ADD IT AS AN EXTERNAL PROJECT                   ###
+#######################################################
 
-    #######################################################
-    ###        Set results on the parent scope          ###
-    #######################################################
-    if (${package_name}_FOUND)
-        set(${package_name}_FOUND        ${${package_name}_FOUND}        PARENT_SCOPE)
-        set(${package_name}_INCLUDE_DIRS ${${package_name}_INCLUDE_DIRS} PARENT_SCOPE)
-        set(${package_name}_LIBRARIES    ${${package_name}_LIBRARIES}    PARENT_SCOPE)
-    else()
-        if (NOT ${QUIET_MODE})
-            if (NOT QUIET_MODE)
-                message(STATUS "${package_name} NOT FOUND")
-            endif()
-        endif()
-    endif()
+ExternalProject_Add(
+        ${package_name}
+        GIT_REPOSITORY ${repository}
+        GIT_TAG "master"
+        SOURCE_DIR "${CMAKE_BINARY_DIR}/3rdparty/${package_name}"
+        PREFIX "${CMAKE_BINARY_DIR}/3rdparty/prefix/${package_name}"
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+)
 
-    #######################################################
-    ###        Emit error if still not found            ###
-    #######################################################
-    if (NOT ${package_name}_FOUND)
-        if (NOT ${QUIET_MODE})
-            set(error_msg_mode STATUS)
-            if (${REQUIRED_MODE})
-                set(error_msg_mode FATAL_ERROR)
-            endif()
-            if (${UNIX})
-                if (${APPLE})
-                    if (NOT QUIET_MODE)
-                        message(${error_msg_mode} "You need to install ${package_name} to run this project.\nInstall http://brewformulas.org/ and then run something like:\n`brew install ${package_name}`")
-                    endif()
-                else()
-                    if (NOT QUIET_MODE)
-                        message(${error_msg_mode} "You need to install ${package_name} to run this project.\nInstall `apt-get` and then run something like:\n `sudo apt-get install ${package_name}`")
-                    endif()
-                endif()
-            endif()
-            if (${WIN32})
-                if (NOT QUIET_MODE)
-                    message(${error_msg_mode} "You need to install the package ${package_name}`")
-                endif()
-            endif()
-        endif()
-    endif()
-    message("")
-endfunction()
+#######################################################
+### CREATE AN INTERFACE LIBRARY                     ###
+#######################################################
 
-function(find_find_package package_name)
-    set(${package_name}_FIND_PACKAGE_FOUND FALSE PARENT_SCOPE)
-    set(${package_name}_FIND_PACKAGE_FOUND FALSE)
-    foreach (CURRENT_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_ROOT}/Modules)
-        set(filename ${CURRENT_MODULE_PATH}/Find${package_name}.cmake)
-        if(EXISTS ${filename})
-            set(${package_name}_FIND_PACKAGE_FOUND TRUE PARENT_SCOPE)
-            set(${package_name}_FIND_PACKAGE_FOUND TRUE)
-            set(${package_name}_FIND_PACKAGE_FILE ${filename} PARENT_SCOPE)
-            if (NOT QUIET_MODE)
-                message(STATUS "Find${package_name}.cmake found.")
-            endif()
-        endif()
-    endforeach ()
-    if(NOT ${package_name}_FIND_PACKAGE_FOUND)
-        if (NOT QUIET_MODE)
-            message(STATUS "Find${package_name}.cmake not found anywhere")
-        endif()
-    endif()
-endfunction()
+# Create an interface library
+add_library(${package_name}-interface INTERFACE)
+add_dependencies(${package_name}-interface ${package_name})
 
-function(best_modules_path package_name)
-    set(ideal_path ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/)
-    set(defined_path "")
-    foreach (CURRENT_PATH ${CMAKE_MODULE_PATH})
-        if (NOT defined_path)
-            set(defined_path ${CURRENT_PATH})
-        else()
-            if (defined_path STREQUALS ideal_path)
-                set(defined_path ${CURRENT_PATH})
-            endif()
-        endif()
-    endforeach()
-    if (NOT defined_path)
-        set(defined_path ${ideal_path})
-        set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${defined_path}")
-    endif()
-    set(destination_folder ${defined_path} PARENT_SCOPE)
-endfunction()
+# List of libraries, including the interface library we just created
+set(${package_name}_LIBRARIES ${package_name}-interface ${library_files})
+
+# Include directories
+set(${package_name}_INCLUDE_DIRS ${include_directories})
+
+set(${package_name}_FOUND TRUE)
