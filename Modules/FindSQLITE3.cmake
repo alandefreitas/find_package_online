@@ -3,7 +3,7 @@
 # ${package_name}_LIBRARIES	- List of libraries.
 # ${package_name}_FOUND	- True if found.
 
-set(package_name POSTGRES)
+set(package_name SQLITE3)
 set(header_names sqlite3.h)
 set(library_names sqlite sqlite3.0 libsqlite libsqlite3.0)
 
