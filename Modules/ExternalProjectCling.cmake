@@ -19,39 +19,45 @@ set(include_directories "${CMAKE_BINARY_DIR}/3rdparty/${package_name}/build/incl
 ### TRY TO IDENTIFY OPERATING SYSTEM FOR THE BINARY ###
 #######################################################
 
-find_program(LSB_RELEASE lsb_release)
-execute_process(COMMAND ${LSB_RELEASE} -is
-        OUTPUT_VARIABLE LSB_RELEASE_ID_SHORT
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
+if (UNIX)
+    if (APPLE)
+        set(cling_binary_download_url "https://root.cern.ch/download/cling//cling_2018-01-12_mac1013.tar.bz2")
+    else()
+        find_program(LSB_RELEASE lsb_release)
+        execute_process(COMMAND ${LSB_RELEASE} -is
+                        OUTPUT_VARIABLE LSB_RELEASE_ID_SHORT
+                        OUTPUT_STRIP_TRAILING_WHITESPACE
+                        )
 
-execute_process(COMMAND ${LSB_RELEASE} -cs
-        OUTPUT_VARIABLE LSB_RELEASE_CODENAME
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-
-#message("-- CMAKE_SYSTEM_INFO_FILE: ${CMAKE_SYSTEM_INFO_FILE}")
-#message("-- CMAKE_SYSTEM_NAME:      ${CMAKE_SYSTEM_NAME}")
-#message("-- CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
-#message("-- CMAKE_SYSTEM:           ${CMAKE_SYSTEM}")
-#message("-- CMAKE_SYSTEM_VERSION:   ${CMAKE_SYSTEM_VERSION}")
-#message("-- CMAKE_HOST_SYSTEM_NAME: ${CMAKE_HOST_SYSTEM_NAME}")
-#message("-- LSB_RELEASE_ID_SHORT:   ${LSB_RELEASE_ID_SHORT}")
-#message("-- LSB_RELEASE_CODENAME:   ${LSB_RELEASE_CODENAME}")
-
-if (LSB_RELEASE_ID_SHORT STREQUAL "Ubuntu")
-    if (LSB_RELEASE_CODENAME STREQUAL "xenial")
-        set(cling_binary_download_url "https://root.cern.ch/download/cling//cling_2018-01-11_ubuntu16.tar.bz2")
-    elseif(LSB_RELEASE_CODENAME STREQUAL "trusty")
-        set(cling_binary_download_url "https://root.cern.ch/download/cling//cling_2018-01-11_ubuntu14.tar.bz2")
-    elseif(LSB_RELEASE_CODENAME STREQUAL "artful")
-        set(cling_binary_download_url "https://root.cern.ch/download/cling//cling_2018-01-11_ubuntu17.10.tar.bz2")
-    elseif(LSB_RELEASE_CODENAME STREQUAL "Zesty")
-        set(cling_binary_download_url "https://root.cern.ch/download/cling//cling_2018-01-11_ubuntu17.10.tar.bz2")
+        execute_process(COMMAND ${LSB_RELEASE} -cs
+                        OUTPUT_VARIABLE LSB_RELEASE_CODENAME
+                        OUTPUT_STRIP_TRAILING_WHITESPACE
+                        )
+        if (LSB_RELEASE_ID_SHORT STREQUAL "Ubuntu")
+            if (LSB_RELEASE_CODENAME STREQUAL "xenial")
+                set(cling_binary_download_url "https://root.cern.ch/download/cling//cling_2018-01-11_ubuntu16.tar.bz2")
+            elseif(LSB_RELEASE_CODENAME STREQUAL "trusty")
+                set(cling_binary_download_url "https://root.cern.ch/download/cling//cling_2018-01-11_ubuntu14.tar.bz2")
+            elseif(LSB_RELEASE_CODENAME STREQUAL "artful")
+                set(cling_binary_download_url "https://root.cern.ch/download/cling//cling_2018-01-11_ubuntu17.10.tar.bz2")
+            elseif(LSB_RELEASE_CODENAME STREQUAL "Zesty")
+                set(cling_binary_download_url "https://root.cern.ch/download/cling//cling_2018-01-11_ubuntu17.10.tar.bz2")
+            endif()
+        elseif(LSB_RELEASE_ID_SHORT STREQUAL "Fedora")
+            set(cling_binary_download_url "https://root.cern.ch/download/cling//cling_2018-01-12_fedora27.tar.bz2")
+        endif()
     endif()
 endif()
 
 if (DEFINED cling_binary_download_url)
+    message("-- CMAKE_SYSTEM_INFO_FILE: ${CMAKE_SYSTEM_INFO_FILE}")
+    message("-- CMAKE_SYSTEM_NAME:      ${CMAKE_SYSTEM_NAME}")
+    message("-- CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
+    message("-- CMAKE_SYSTEM:           ${CMAKE_SYSTEM}")
+    message("-- CMAKE_SYSTEM_VERSION:   ${CMAKE_SYSTEM_VERSION}")
+    message("-- CMAKE_HOST_SYSTEM_NAME: ${CMAKE_HOST_SYSTEM_NAME}")
+    message("-- LSB_RELEASE_ID_SHORT:   ${LSB_RELEASE_ID_SHORT}")
+    message("-- LSB_RELEASE_CODENAME:   ${LSB_RELEASE_CODENAME}")
     message("-- cling_binary_download_url:   ${cling_binary_download_url}")
 endif()
 
@@ -110,14 +116,14 @@ if (DEFINED cling_binary_download_url)
 
     # Download the binaries from their website and put them in the build folder
     ExternalProject_Add(Cling
-            URL               ${cling_binary_download_url}
-            PREFIX            "${CMAKE_BINARY_DIR}/3rdparty/prefix/${package_name}/cling_binaries"
-            BUILD_COMMAND ""
-            UPDATE_COMMAND ""
-            CONFIGURE_COMMAND ""
-            INSTALL_COMMAND ""
-            SOURCE_DIR        ${PROJECT_BINARY_DIR}/3rdparty/${package_name}/build
-            )
+                        URL               ${cling_binary_download_url}
+                        PREFIX            "${CMAKE_BINARY_DIR}/3rdparty/prefix/${package_name}/cling_binaries"
+                        BUILD_COMMAND ""
+                        UPDATE_COMMAND ""
+                        CONFIGURE_COMMAND ""
+                        INSTALL_COMMAND ""
+                        SOURCE_DIR        ${PROJECT_BINARY_DIR}/3rdparty/${package_name}/build
+                        )
     add_dependencies(Cling Cling-Sources)
 else()
     # Download Cling sources and install from source
