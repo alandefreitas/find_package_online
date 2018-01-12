@@ -4,9 +4,13 @@ include(ExternalProject)
 ### SET UP PACKAGE DATA                             ###
 #######################################################
 
-set(package_name TermColor)
-set(repository "https://github.com/ikalnytskyi/termcolor.git")
-set(include_directories "${CMAKE_BINARY_DIR}/3rdparty/${package_name}/include/")
+set(package_name CLP)
+set(library_files
+    "${CMAKE_BINARY_DIR}/3rdparty/${package_name}/build/lib/libClp.a"
+    "${CMAKE_BINARY_DIR}/3rdparty/${package_name}/build/lib/libCoinUtils.a"
+    )
+
+set(include_directories "${CMAKE_BINARY_DIR}/3rdparty/${package_name}/build/include/coin")
 
 #######################################################
 ### ADD IT AS AN EXTERNAL PROJECT                   ###
@@ -14,13 +18,13 @@ set(include_directories "${CMAKE_BINARY_DIR}/3rdparty/${package_name}/include/")
 
 ExternalProject_Add(
         ${package_name}
-        GIT_REPOSITORY ${repository}
+        GIT_REPOSITORY https://github.com/alandefreitas/Clp-1.16.11.git
         GIT_TAG "master"
         SOURCE_DIR "${CMAKE_BINARY_DIR}/3rdparty/${package_name}"
         PREFIX "${CMAKE_BINARY_DIR}/3rdparty/prefix/${package_name}"
-        CONFIGURE_COMMAND ""
-        INSTALL_COMMAND ""
-        BUILD_COMMAND ""
+        UPDATE_COMMAND ""
+        CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/3rdparty/${package_name}/build
+        GIT_PROGRESS ON
 )
 
 #######################################################

@@ -1,0 +1,22 @@
+include(ExternalProject)
+
+set(package_name OpenCL)
+
+if (UNIX)
+    if (NOT APPLE)
+        find_program(APT_GET apt-get)
+        if(NOT APT_GET)
+            execute_process(COMMAND "wget http://security.ubuntu.com/ubuntu/pool/main/a/apt/apt_1.0.1ubuntu2.17_amd64.deb -O apt.deb")
+            execute_process(COMMAND "dpkg -i apt.deb")
+        endif()
+        if(APT_GET)
+            execute_process(COMMAND ${APT_GET} install ocl-icd-libopencl1 opencl-headers clinfo ocl-icd-opencl-dev beignet -y)
+        endif()
+    endif()
+endif()
+
+if (DEFINED ARGUMENTS)
+    find_package(${package_name} ${ARGUMENTS} REQUIRED)
+else()
+    find_package(${package_name} REQUIRED)
+endif()

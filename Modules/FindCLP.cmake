@@ -3,9 +3,9 @@
 # ${package_name}_LIBRARIES	- List of libraries.
 # ${package_name}_FOUND	- True if found.
 
-set(package_name Cling)
-set(header_names cling/Interpreter/Interpreter.h)
-set(library_names libcling)
+set(package_name CLP)
+set(header_names ClpSimplex.hpp)
+set(library_names libClp.a libCoinUtils.a)
 
 # Usual messages
 set(${package_name}_INCLUDE_PATH_DESCRIPTION "top-level directory containing the ${package_name} include directories. E.g /usr/local/include/${package_name} or C:/Program Files/${package_name}/include")
@@ -25,7 +25,7 @@ set(HEADER_SEARCH_PATHS
     $ENV{${package_name}_ROOT}
     "$ENV{LIB_DIR}/include/${package_name}"
     # usual folder if it was installed by external project
-    "${CMAKE_BINARY_DIR}/3rdparty/${package_name}/build/include"
+    "${CMAKE_BINARY_DIR}/3rdparty/${package_name}/build/include/coin"
     # usual unix folders
     /usr/include
     /usr/local/include
@@ -43,7 +43,7 @@ if (library_names)
         "$ENV{LIB_DIR}/lib"
         "$ENV{LIB_DIR}/include/${package_name}"
         # usual folder if it was installed by external project
-        ${CMAKE_BINARY_DIR}/3rdparty/${package_name}/build/lib
+        ${CMAKE_BINARY_DIR}/3rdparty/${package_name}/build
         # usual unix folders
         /usr/lib
         /usr/local/lib
@@ -73,42 +73,31 @@ find_path(${package_name}_INCLUDE_DIR
 ###               LOOK FOR LIBRARY                  ###
 #######################################################
 if (library_names)
-    find_library( ${package_name}_LIBRARY_libcling
-                  NAMES libcling${CMAKE_SHARED_LIBRARY_SUFFIX} # possible names for the file in a directory
+    find_library( ${package_name}_LIBRARY_libClp
+                  NAMES libClp.a # possible names for the file in a directory
                   PATHS ${LIBRARY_SEARCH_PATHS} # Directories to search in addition to the default locations
                   PATH_SUFFIXES lib # additional subdirectories to check below each directory location
                   )
-    find_library( ${package_name}_LIBRARY_libclingInterpreter
-                  NAMES libclingInterpreter.a # possible names for the file in a directory
-                  PATHS ${LIBRARY_SEARCH_PATHS} # Directories to search in addition to the default locations
-                  PATH_SUFFIXES lib # additional subdirectories to check below each directory location
-                  )
-    find_library( ${package_name}_LIBRARY_libclingMetaProcessor
-                  NAMES libclingMetaProcessor.a # possible names for the file in a directory
-                  PATHS ${LIBRARY_SEARCH_PATHS} # Directories to search in addition to the default locations
-                  PATH_SUFFIXES lib # additional subdirectories to check below each directory location
-                  )
-    find_library( ${package_name}_LIBRARY_libclingUtils
-                  NAMES libclingUtils.a # possible names for the file in a directory
+    find_library( ${package_name}_LIBRARY_libCoinUtils
+                  NAMES libCoinUtils.a # possible names for the file in a directory
                   PATHS ${LIBRARY_SEARCH_PATHS} # Directories to search in addition to the default locations
                   PATH_SUFFIXES lib # additional subdirectories to check below each directory location
                   )
 endif()
+
 
 #######################################################
 ###                 SETUP VARIABLES                 ###
 #######################################################
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(${package_name} DEFAULT_MSG
-                                  ${package_name}_LIBRARY_libcling
-                                  ${package_name}_LIBRARY_libclingInterpreter
-                                  ${package_name}_LIBRARY_libclingMetaProcessor
-                                  ${package_name}_LIBRARY_libclingUtils
+                                  ${package_name}_LIBRARY_libClp
+                                  ${package_name}_LIBRARY_libCoinUtils
                                   ${package_name}_INCLUDE_DIR)
+
 mark_as_advanced(${package_name}_INCLUDE_DIR ${package_name}_LIBRARY )
 set(${package_name}_LIBRARIES
-        ${${package_name}_LIBRARY_libcling}
-        ${${package_name}_LIBRARY_libclingInterpreter}
-        ${${package_name}_LIBRARY_libclingMetaProcessor}
-        ${${package_name}_LIBRARY_libclingUtils})
+        ${${package_name}_LIBRARY_libClp}
+        ${${package_name}_LIBRARY_libCoinUtils})
+
 set(${package_name}_INCLUDE_DIRS ${${package_name}_INCLUDE_DIR} )
