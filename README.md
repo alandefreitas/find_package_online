@@ -9,8 +9,8 @@ include(FindPackageOnline)
 
 If you want to make it faster:
 
-```cmakef
-if (NOT EXISTS ${FindPackageOnline})
+```cmake
+if (NOT EXISTS FindPackageOnline)
     file(DOWNLOAD https://raw.githubusercontent.com/alandefreitas/find_package_online/master/FindPackageOnline ${CMAKE_CURRENT_SOURCE_DIR}/FindPackageOnline)
 endif()
 include(FindPackageOnline)
