@@ -18,7 +18,7 @@ ExternalProject_Add(
         GIT_TAG "master"
         SOURCE_DIR "${CMAKE_BINARY_DIR}/3rdparty/${package_name}"
         PREFIX "${CMAKE_BINARY_DIR}/3rdparty/prefix/${package_name}"
-        CMAKE_ARGS -DPEGTL_BUILD_TESTS=OFF -DPEGTL_BUILD_EXAMPLES=OFF
+        CMAKE_ARGS -DPEGTL_BUILD_TESTS=OFF -DPEGTL_BUILD_EXAMPLES=OFF -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/3rdparty/${package_name}/install
 )
 
 #######################################################
