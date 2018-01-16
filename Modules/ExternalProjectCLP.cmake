@@ -23,7 +23,11 @@ ExternalProject_Add(
         SOURCE_DIR "${CMAKE_BINARY_DIR}/3rdparty/${package_name}"
         PREFIX "${CMAKE_BINARY_DIR}/3rdparty/prefix/${package_name}"
         UPDATE_COMMAND ""
-        CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/3rdparty/${package_name}/build
+        CMAKE_ARGS
+            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+            -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/3rdparty/${package_name}/build
+            -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+            -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
         GIT_PROGRESS ON
 )
 

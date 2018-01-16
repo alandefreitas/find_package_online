@@ -4,7 +4,7 @@
 # ${package_name}_FOUND	- True if found.
 
 set(package_name JSON)
-set(header_names src/json.hpp)
+set(header_names json.hpp)
 set(library_names)
 
 # Usual messages
@@ -25,7 +25,7 @@ set(HEADER_SEARCH_PATHS
     $ENV{${package_name}_ROOT}
     "$ENV{LIB_DIR}/include/${package_name}"
     # usual folder if it was installed by external project
-    "${CMAKE_BINARY_DIR}/3rdparty/${package_name}"
+    "${CMAKE_BINARY_DIR}/3rdparty/${package_name}/src"
     # usual unix folders
     /usr/single_include
     /usr/local/single_include
